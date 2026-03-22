@@ -25,6 +25,7 @@ const ConfidentialTokenTransferFlow = ({ txNonce }: Props) => {
   return (
     <TxFlow
       initialData={initialData}
+      txNonce={txNonce}
       icon={AssetsIcon}
       subtitle="Confidential send"
       eventCategory={TxFlowType.CONFIDENTIAL_TOKEN_TRANSFER}
