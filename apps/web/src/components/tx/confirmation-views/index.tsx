@@ -41,6 +41,8 @@ import { Box } from '@mui/material'
 import DecodedData from '@/components/transactions/TxDetails/TxData/DecodedData'
 import BridgeTransaction from './BridgeTransaction'
 import { LifiSwapTransaction } from './LifiSwapTransaction'
+import ConfidentialTransfer from './ConfidentialTransfer'
+import { isConfidentialTransferCalldata } from '@/services/confidential/encode'
 
 type ConfirmationViewProps = {
   txDetails?: TransactionDetails
@@ -86,6 +88,10 @@ const getConfirmationViewComponent = ({ txInfo, txData, txFlow }: TransactionPre
 
   if (isCustomTxInfo(txInfo) && txData && isNestedSafeCreation(txData)) {
     return <NestedSafeCreation txData={txData} />
+  }
+
+  if (isCustomTxInfo(txInfo) && txData?.hexData && isConfidentialTransferCalldata(txData.hexData)) {
+    return <ConfidentialTransfer txData={txData} />
   }
 
   return null

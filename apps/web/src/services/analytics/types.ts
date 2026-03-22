@@ -63,5 +63,6 @@ export enum TxFlowType {
   SIGNERS_STRUCTURE = 'signers-structure',
   START_RECOVERY = 'propose-recovery',
   TOKEN_TRANSFER = 'token-transfer',
+  CONFIDENTIAL_TOKEN_TRANSFER = 'confidential-token-transfer',
   UPDATE_SAFE = 'update-safe',
 }

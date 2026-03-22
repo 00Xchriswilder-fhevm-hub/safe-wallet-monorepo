@@ -1,7 +1,13 @@
 import { useCallback, useContext } from 'react'
-import { MakeASwapButton, SendTokensButton, TxBuilderButton } from '@/components/tx-flow/common/TxButton'
+import {
+  ConfidentialSendButton,
+  MakeASwapButton,
+  SendTokensButton,
+  TxBuilderButton,
+} from '@/components/tx-flow/common/TxButton'
 import { Container, Grid, Paper, Typography } from '@mui/material'
 import { TxModalContext } from '../../'
+import ConfidentialTokenTransferFlow from '../ConfidentialTokenTransfer'
 import TokenTransferFlow from '../TokenTransfer'
 import { ProgressBar } from '@/components/common/ProgressBar'
 import ChainIndicator from '@/components/common/ChainIndicator'
@@ -17,6 +23,10 @@ const NewTxFlow = () => {
 
   const onTokensClick = useCallback(() => {
     setTxFlow(<TokenTransferFlow />)
+  }, [setTxFlow])
+
+  const onConfidentialClick = useCallback(() => {
+    setTxFlow(<ConfidentialTokenTransferFlow />)
   }, [setTxFlow])
 
   const progress = 10
@@ -79,6 +89,7 @@ const NewTxFlow = () => {
               <hn.HnMiniTxBanner />
 
               <SendTokensButton onClick={onTokensClick} />
+              <ConfidentialSendButton onClick={onConfidentialClick} />
               <MakeASwapButton />
 
               <Typography

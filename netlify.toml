@@ -1,0 +1,13 @@
+# Netlify build for Safe web (static export). Repo root = monorepo root.
+# Docs: https://docs.netlify.com/configure-builds/overview/
+
+[build]
+  # Yarn 4 via Corepack (see root package.json "packageManager")
+  command = "corepack enable && yarn install && yarn workspace @safe-global/web build"
+  publish = "apps/web/out"
+
+[build.environment]
+  NODE_VERSION = "24.14.0"
+
+# Optional: set secrets in Netlify UI → Site settings → Environment variables
+# (e.g. NEXT_PUBLIC_INFURA_TOKEN, NEXT_PUBLIC_SEPOLIA_RELAYER_URL, confidential token addresses).

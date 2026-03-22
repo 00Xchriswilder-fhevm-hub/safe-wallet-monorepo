@@ -13,6 +13,7 @@ import { useContext } from 'react'
 import { TxModalContext } from '..'
 import SwapIcon from '@/public/images/common/swap.svg'
 import AssetsIcon from '@/public/images/sidebar/assets.svg'
+import ShieldIcon from '@/public/images/common/shield.svg'
 import { useIsSwapFeatureEnabled } from '@/features/swap'
 
 const buttonSx = {
@@ -34,6 +35,22 @@ export const SendTokensButton = ({ onClick, sx }: { onClick: () => void; sx?: Bu
         Send tokens
       </Button>
     </Track>
+  )
+}
+
+export const ConfidentialSendButton = ({ onClick, sx }: { onClick: () => void; sx?: ButtonProps['sx'] }) => {
+  return (
+    <Button
+      data-testid="confidential-send-btn"
+      onClick={onClick}
+      variant="outlined"
+      size="xlarge"
+      sx={sx ?? buttonSx}
+      fullWidth
+      startIcon={<ShieldIcon width={20} />}
+    >
+      Confidential send
+    </Button>
   )
 }
 
