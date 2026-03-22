@@ -69,6 +69,7 @@ const withPWA = withPWAInit({
 
 const isProd = process.env.NODE_ENV === 'production'
 const enableExperimentalOptimizations = process.env.ENABLE_EXPERIMENTAL_OPTIMIZATIONS === '1'
+const isNetlify = process.env.NETLIFY === 'true'
 
 let appVersion = pkg.version
 
@@ -96,9 +97,11 @@ const nextConfig = {
 
   pageExtensions: ['js', 'jsx', 'md', 'mdx', 'ts', 'tsx'],
   reactStrictMode: false,
-  productionBrowserSourceMaps: true,
+  // Netlify builds OOM with source maps + full-app ESLint; keep local/CI defaults elsewhere.
+  productionBrowserSourceMaps: isNetlify ? false : true,
   eslint: {
     dirs: ['src', 'cypress'],
+    ignoreDuringBuilds: isNetlify,
   },
   ...(isProd || enableExperimentalOptimizations
     ? {

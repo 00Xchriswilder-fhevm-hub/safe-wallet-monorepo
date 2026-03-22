@@ -8,6 +8,8 @@
 
 [build.environment]
   NODE_VERSION = "24.14.0"
+  # Next.js lint + typecheck can exceed the default ~2GB heap on Netlify; raise the limit.
+  NODE_OPTIONS = "--max-old-space-size=8192"
 
 # Optional: set secrets in Netlify UI → Site settings → Environment variables
 # (e.g. NEXT_PUBLIC_INFURA_TOKEN, NEXT_PUBLIC_SEPOLIA_RELAYER_URL, confidential token addresses).
