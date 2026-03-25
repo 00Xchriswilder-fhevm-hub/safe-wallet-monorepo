@@ -1,18 +1,7 @@
 import { type ReactElement, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import CheckIcon from '@mui/icons-material/Check'
 import { BrowserProvider, type Eip1193Provider, type Signer } from 'ethers'
-import {
-  Alert,
-  Box,
-  Button,
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Select,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material'
+import { Alert, Box, Button, Link, Stack, TextField, Typography } from '@mui/material'
 import { isAddress } from 'viem'
 import TxCard from '@/components/tx-flow/common/TxCard'
 import { TxFlowContext, type TxFlowContextType } from '@/components/tx-flow/TxFlowProvider'
@@ -21,13 +10,14 @@ import useSafeInfo from '@/hooks/useSafeInfo'
 import useWallet from '@/hooks/wallets/useWallet'
 import { relayerEncryptAmountForChain } from '@/services/confidential/relayer'
 import {
+  getAclProxyForChainId,
   getConfidentialTokenAddress,
   getFhevmMultisigHelperForChainId,
   TOKEN_LABELS,
   type ConfidentialTokenKey,
 } from '@/services/confidential/contracts'
 import { sendAclAllowTx, sendAllowForSafeMultiSigTx } from '@/services/confidential/preflight'
-import { SEPOLIA_CHAIN_ID } from '@/services/confidential/relayerConstants'
+import { MAINNET_CHAIN_ID, SEPOLIA_CHAIN_ID } from '@/services/confidential/relayerConstants'
 import type { ConfidentialTokenTransferParams } from './types'
 
 const defaultParams: ConfidentialTokenTransferParams = {
@@ -58,7 +48,8 @@ const CreateConfidentialTokenTransfer = (): ReactElement => {
 
   const [recipient, setRecipient] = useState(data?.recipient ?? defaultParams.recipient)
   const [amount, setAmount] = useState(data?.amount ?? defaultParams.amount)
-  const [tokenKey, setTokenKey] = useState<ConfidentialTokenKey>(data?.tokenKey ?? 'usdc')
+  /** Confidential send UI is cUSDC-only. */
+  const tokenKey: ConfidentialTokenKey = 'usdc'
   const [encrypted, setEncrypted] = useState(data?.encrypted)
   const [helperTxHash, setHelperTxHash] = useState(data?.helperTxHash)
   const [aclTxHash, setAclTxHash] = useState(data?.aclTxHash)
@@ -68,10 +59,16 @@ const CreateConfidentialTokenTransfer = (): ReactElement => {
   const [formError, setFormError] = useState<string | null>(null)
 
   const helper = useMemo(() => getFhevmMultisigHelperForChainId(chainId), [chainId])
+  const acl = useMemo(() => getAclProxyForChainId(chainId), [chainId])
   const confToken = useMemo(() => getConfidentialTokenAddress(chainId, tokenKey), [chainId, tokenKey])
 
+  const isConfidentialChain = chainId === SEPOLIA_CHAIN_ID || chainId === MAINNET_CHAIN_ID
   const canUse =
-    chainId === SEPOLIA_CHAIN_ID && helper && confToken && confToken !== '0x0000000000000000000000000000000000000000'
+    isConfidentialChain &&
+    helper &&
+    confToken &&
+    confToken !== '0x0000000000000000000000000000000000000000' &&
+    (chainId === SEPOLIA_CHAIN_ID || Boolean(acl))
 
   const encryptDone = Boolean(encrypted?.handle)
   const helperDone = Boolean(helperTxHash)
@@ -105,7 +102,7 @@ const CreateConfidentialTokenTransfer = (): ReactElement => {
           contractAddress: helper,
           userAddress: wallet.address,
           amount: amount.trim(),
-          decimals: TOKEN_LABELS[tokenKey].decimals,
+          decimals: TOKEN_LABELS.usdc.decimals,
         },
         chainId,
       )
@@ -120,7 +117,7 @@ const CreateConfidentialTokenTransfer = (): ReactElement => {
     } finally {
       setEncrypting(false)
     }
-  }, [amount, chainId, helper, tokenKey, wallet?.address])
+  }, [amount, chainId, helper, wallet?.address])
 
   const onHelper = useCallback(async () => {
     setFormError(null)
@@ -191,23 +188,34 @@ const CreateConfidentialTokenTransfer = (): ReactElement => {
     <TxCard>
       <Stack spacing={2}>
         <Typography variant="body2" color="text.secondary">
-          Confidential send uses the Sepolia relayer to encrypt amounts, then on-chain helper + ACL transactions from
-          your wallet, and finally a Safe transaction to transfer encrypted balances. Configure confidential token
-          addresses in <code>.env</code> (see <code>.env.example</code>).
+          <Link href="https://portfolio.zama.org/shield" target="_blank" rel="noopener noreferrer" underline="hover">
+            Shield your USDC on Zama Portfolio
+          </Link>{' '}
+          to move USDC into confidential form (cUSDC) to FUND the safe multisig.
+        </Typography>
+
+        <Typography variant="body2" color="text.secondary">
+          Keep enough ETH in your wallet for gas on the helper and ACL transactions. Ensure your Safe is funded so
+          owners can sign and execute the final confidential transfer from the transaction queue.
         </Typography>
 
         {!canUse && (
           <Alert severity="warning">
-            {chainId !== SEPOLIA_CHAIN_ID ? (
-              <>Switch the app to Sepolia (URL + wallet) to use confidential send.</>
-            ) : tokenKey === 'usdt' ? (
+            {chainId !== SEPOLIA_CHAIN_ID && chainId !== MAINNET_CHAIN_ID ? (
+              <>Switch the app to Sepolia or Ethereum mainnet (URL + wallet) to use confidential send.</>
+            ) : chainId === MAINNET_CHAIN_ID && !acl ? (
               <>
-                Set non-zero <code>NEXT_PUBLIC_SEPOLIA_CONF_USDT_ADDRESS</code> (and underlying USDT) in{' '}
-                <code>.env</code>, then restart <code>yarn workspace @safe-global/web dev</code>.
+                On mainnet, set <code>NEXT_PUBLIC_MAINNET_ACL_PROXY</code> in <code>.env</code>, then restart{' '}
+                <code>yarn workspace @safe-global/web dev</code> so Next.js inlines <code>NEXT_PUBLIC_*</code> vars.
+              </>
+            ) : chainId === SEPOLIA_CHAIN_ID ? (
+              <>
+                cUSDC addresses could not be loaded. Add <code>NEXT_PUBLIC_SEPOLIA_CONF_USDC_ADDRESS</code> to{' '}
+                <code>.env</code> and restart the dev server so Next.js inlines <code>NEXT_PUBLIC_*</code> vars.
               </>
             ) : (
               <>
-                cUSDC addresses could not be loaded. Add <code>NEXT_PUBLIC_SEPOLIA_CONF_USDC_ADDRESS</code> to{' '}
+                cUSDC addresses could not be loaded. Add <code>NEXT_PUBLIC_MAINNET_CONF_USDC_ADDRESS</code> to{' '}
                 <code>.env</code> and restart the dev server so Next.js inlines <code>NEXT_PUBLIC_*</code> vars.
               </>
             )}
@@ -220,18 +228,13 @@ const CreateConfidentialTokenTransfer = (): ReactElement => {
           </Alert>
         )}
 
-        <FormControl fullWidth>
-          <InputLabel id="conf-token-label">Confidential token</InputLabel>
-          <Select
-            labelId="conf-token-label"
-            label="Confidential token"
-            value={tokenKey}
-            onChange={(e) => setTokenKey(e.target.value as ConfidentialTokenKey)}
-          >
-            <MenuItem value="usdc">{TOKEN_LABELS.usdc.symbol}</MenuItem>
-            <MenuItem value="usdt">{TOKEN_LABELS.usdt.symbol}</MenuItem>
-          </Select>
-        </FormControl>
+        <TextField
+          label="Confidential token"
+          fullWidth
+          value={TOKEN_LABELS.usdc.symbol}
+          inputProps={{ readOnly: true }}
+          helperText="Confidential send uses cUSDC only."
+        />
 
         <TextField
           label="Recipient address"
@@ -247,7 +250,7 @@ const CreateConfidentialTokenTransfer = (): ReactElement => {
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
           placeholder="0.0"
-          helperText={`Decimals: ${TOKEN_LABELS[tokenKey].decimals}`}
+          helperText={`Decimals: ${TOKEN_LABELS.usdc.decimals}`}
         />
 
         <Box>
@@ -280,7 +283,7 @@ const CreateConfidentialTokenTransfer = (): ReactElement => {
           variant={activePreflightStep === 2 ? 'contained' : 'outlined'}
           color={activePreflightStep === 2 ? 'primary' : 'inherit'}
           onClick={onHelper}
-          disabled={!encrypted || helperBusy}
+          disabled={!canUse || !encrypted || helperBusy}
           fullWidth
           startIcon={helperDone && activePreflightStep !== 2 ? <CheckIcon fontSize="small" /> : undefined}
           sx={
@@ -304,7 +307,7 @@ const CreateConfidentialTokenTransfer = (): ReactElement => {
           variant={activePreflightStep === 3 ? 'contained' : 'outlined'}
           color={activePreflightStep === 3 ? 'primary' : 'inherit'}
           onClick={onAcl}
-          disabled={!encrypted || aclBusy}
+          disabled={!canUse || !encrypted || aclBusy}
           fullWidth
           startIcon={aclDone && activePreflightStep !== 3 ? <CheckIcon fontSize="small" /> : undefined}
           sx={
@@ -329,7 +332,13 @@ const CreateConfidentialTokenTransfer = (): ReactElement => {
           sign and execute from the transaction queue as usual.
         </Alert>
 
-        <Button variant="contained" onClick={onContinue} disabled={!canUse || !encrypted} size="large" fullWidth>
+        <Button
+          variant="contained"
+          onClick={onContinue}
+          disabled={!canUse || !encrypted || !helperTxHash || !aclTxHash}
+          size="large"
+          fullWidth
+        >
           Continue to review
         </Button>
       </Stack>

@@ -29,6 +29,17 @@ const SEPOLIA_CONTRACTS = {
   CONF_USDT: envAddr('NEXT_PUBLIC_SEPOLIA_CONF_USDT_ADDRESS', '0x0000000000000000000000000000000000000000'),
 } as const
 
+/**
+ * Mainnet: underlying + confidential token pair (override via NEXT_PUBLIC_*).
+ * Defaults set to zPayy mainnet USDC + confUSDC wrapper when present.
+ */
+const MAINNET_CONTRACTS = {
+  USDC: envAddr('NEXT_PUBLIC_MAINNET_USDC_ADDRESS', '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48'),
+  CONF_USDC: envAddr('NEXT_PUBLIC_MAINNET_CONF_USDC_ADDRESS', '0xe978f22157048e5dB8e5d07971376E86671672b2'),
+  USDT: envAddr('NEXT_PUBLIC_MAINNET_USDT_ADDRESS', '0x0000000000000000000000000000000000000000'),
+  CONF_USDT: envAddr('NEXT_PUBLIC_MAINNET_CONF_USDT_ADDRESS', '0x0000000000000000000000000000000000000000'),
+} as const
+
 export type ConfidentialTokenKey = 'usdc' | 'usdt'
 
 export const TOKEN_LABELS: Record<ConfidentialTokenKey, { symbol: string; decimals: number }> = {
@@ -37,8 +48,13 @@ export const TOKEN_LABELS: Record<ConfidentialTokenKey, { symbol: string; decima
 }
 
 export function getConfidentialTokenAddress(chainId: number, key: ConfidentialTokenKey): `0x${string}` | null {
-  if (chainId !== SEPOLIA_CHAIN_ID) return null
-  return key === 'usdc' ? SEPOLIA_CONTRACTS.CONF_USDC : SEPOLIA_CONTRACTS.CONF_USDT
+  if (chainId === SEPOLIA_CHAIN_ID) {
+    return key === 'usdc' ? SEPOLIA_CONTRACTS.CONF_USDC : SEPOLIA_CONTRACTS.CONF_USDT
+  }
+  if (chainId === MAINNET_CHAIN_ID) {
+    return key === 'usdc' ? MAINNET_CONTRACTS.CONF_USDC : MAINNET_CONTRACTS.CONF_USDT
+  }
+  return null
 }
 
 /** Resolve which confidential token key matches an on-chain contract address (for decrypt UI / queue). */
