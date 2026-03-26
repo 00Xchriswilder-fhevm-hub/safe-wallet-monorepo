@@ -48,6 +48,11 @@ export function encodeAclAllowCalldata(handle: `0x${string}`, confidentialToken:
   })
 }
 
+/** `ACL.allow(balanceHandle, owner)` — grant a Safe owner EOA permission to user-decrypt `confidentialBalanceOf(Safe)`. */
+export function encodeAclAllowBalanceOwnerCalldata(handle: `0x${string}`, owner: `0x${string}`): `0x${string}` {
+  return encodeAclAllowCalldata(handle, owner)
+}
+
 export function isConfidentialTransferCalldata(hexData: string | undefined): boolean {
   if (!hexData || hexData.length < 10) return false
   try {

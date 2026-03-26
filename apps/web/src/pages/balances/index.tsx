@@ -14,12 +14,13 @@ import ManageTokensButton from '@/components/balances/ManageTokensButton'
 import StakingBanner from '@/components/dashboard/StakingBanner'
 import useIsStakingBannerVisible from '@/components/dashboard/StakingBanner/useIsStakingBannerVisible'
 import useLocalStorage from '@/services/local-storage/useLocalStorage'
-import { Box, Stack } from '@mui/material'
+import { Box, Stack, Tab, Tabs } from '@mui/material'
 import { BRAND_NAME } from '@/config/constants'
 import { NoFeeCampaignFeature, useIsNoFeeCampaignEnabled } from '@/features/no-fee-campaign'
 import { PortfolioFeature } from '@/features/portfolio'
 import { useLoadFeature } from '@/features/__core__'
 import TotalAssetValue from '@/components/balances/TotalAssetValue'
+import ConfidentialBalancesSection from '@/components/balances/ConfidentialBalancesSection'
 
 const Balances: NextPage = () => {
   const { NoFeeCampaignBanner } = useLoadFeature(NoFeeCampaignFeature)
@@ -33,6 +34,7 @@ const Balances: NextPage = () => {
     'hideNoFeeCampaignAssetsPageBanner',
   )
   const portfolio = useLoadFeature(PortfolioFeature)
+  const [assetsTab, setAssetsTab] = useState<'tokens' | 'confidential'>('tokens')
 
   const tokensFiatTotal = balances.tokensFiatTotal ? Number(balances.tokensFiatTotal) : undefined
 
@@ -49,15 +51,20 @@ const Balances: NextPage = () => {
       <AssetsHeader />
 
       <main>
+        <Box mb={2}>
+          <Tabs value={assetsTab} onChange={(_, value) => setAssetsTab(value)} aria-label="Assets tabs">
+            <Tab value="tokens" label="Tokens" />
+            <Tab value="confidential" label="Confidential" />
+          </Tabs>
+        </Box>
+
         {isStakingBannerVisible && (
           <Box mb={2} sx={{ ':empty': { display: 'none' } }}>
             <StakingBanner />
           </Box>
         )}
 
-        {error ? (
-          <PagePlaceholder img={<NoAssetsIcon />} text="There was an error loading your assets" />
-        ) : (
+        {assetsTab === 'tokens' && !error && (
           <>
             {isNoFeeCampaignEnabled && !hideNoFeeCampaignBanner && (
               <Box mb={2}>
@@ -82,14 +89,22 @@ const Balances: NextPage = () => {
                 </Stack>
               </Stack>
             </Box>
-
-            <AssetsTable
-              setShowHiddenAssets={setShowHiddenAssets}
-              showHiddenAssets={showHiddenAssets}
-              onOpenManageTokens={() => manageTokensButtonRef.current?.openMenu()}
-            />
           </>
         )}
+
+        {assetsTab === 'confidential' && <ConfidentialBalancesSection />}
+
+        {assetsTab === 'tokens' && error ? (
+          <PagePlaceholder img={<NoAssetsIcon />} text="There was an error loading your assets" />
+        ) : null}
+
+        {assetsTab === 'tokens' && !error ? (
+          <AssetsTable
+            setShowHiddenAssets={setShowHiddenAssets}
+            showHiddenAssets={showHiddenAssets}
+            onOpenManageTokens={() => manageTokensButtonRef.current?.openMenu()}
+          />
+        ) : null}
       </main>
     </>
   )

@@ -38,3 +38,8 @@ export async function sendAclAllowTx(params: {
   if (!receipt) throw new Error('ACL transaction failed')
   return tx.hash as `0x${string}`
 }
+
+/**
+ * `ACL.allow(balanceHandle, owner)` — lets an owner EOA user-decrypt that handle (e.g. `confidentialBalanceOf` result).
+ * This is separate from {@link sendAclAllowTx}, which uses `allow(amountHandle, token)` for encrypted *transfer* inputs.
+ */

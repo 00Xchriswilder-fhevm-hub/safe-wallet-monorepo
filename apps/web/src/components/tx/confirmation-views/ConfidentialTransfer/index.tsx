@@ -42,10 +42,6 @@ const ConfidentialTransfer = ({ txData }: { txData: TransactionData }) => {
           <strong>Recipient:</strong> {recipient}
         </Typography>
       )}
-      <Typography variant="body2" color="text.secondary">
-        The transfer amount is not stored in calldata. Every signer can decrypt below before approving (same relayer
-        flow as on the review step). Compare with what the proposer communicated off-chain if needed.
-      </Typography>
       {handle && contractAddress && tokenKey ? (
         <ConfidentialUserDecryptPanel handle={handle} contractAddress={contractAddress} tokenKey={tokenKey} />
       ) : null}

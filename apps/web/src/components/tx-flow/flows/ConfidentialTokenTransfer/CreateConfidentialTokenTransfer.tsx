@@ -18,6 +18,7 @@ import {
 } from '@/services/confidential/contracts'
 import { sendAclAllowTx, sendAllowForSafeMultiSigTx } from '@/services/confidential/preflight'
 import { MAINNET_CHAIN_ID, SEPOLIA_CHAIN_ID } from '@/services/confidential/relayerConstants'
+import ConfidentialSafeBalancePanel from './ConfidentialSafeBalancePanel'
 import type { ConfidentialTokenTransferParams } from './types'
 
 const defaultParams: ConfidentialTokenTransferParams = {
@@ -187,6 +188,8 @@ const CreateConfidentialTokenTransfer = (): ReactElement => {
   return (
     <TxCard>
       <Stack spacing={2}>
+        <ConfidentialSafeBalancePanel context="send" />
+
         <Typography variant="body2" color="text.secondary">
           <Link href="https://portfolio.zama.org/shield" target="_blank" rel="noopener noreferrer" underline="hover">
             Shield your USDC on Zama Portfolio

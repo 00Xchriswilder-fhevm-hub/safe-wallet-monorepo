@@ -64,5 +64,6 @@ export enum TxFlowType {
   START_RECOVERY = 'propose-recovery',
   TOKEN_TRANSFER = 'token-transfer',
   CONFIDENTIAL_TOKEN_TRANSFER = 'confidential-token-transfer',
+  CONFIDENTIAL_BALANCE_ACL = 'confidential-balance-acl',
   UPDATE_SAFE = 'update-safe',
 }
