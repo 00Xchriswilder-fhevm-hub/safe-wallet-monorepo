@@ -188,7 +188,7 @@ const CreateConfidentialTokenTransfer = (): ReactElement => {
   return (
     <TxCard>
       <Stack spacing={2}>
-        <ConfidentialSafeBalancePanel context="send" />
+        <ConfidentialSafeBalancePanel />
 
         <Typography variant="body2" color="text.secondary">
           <Link href="https://portfolio.zama.org/shield" target="_blank" rel="noopener noreferrer" underline="hover">

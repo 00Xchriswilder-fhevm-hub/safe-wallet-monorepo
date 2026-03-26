@@ -10,14 +10,8 @@ import { MAINNET_CHAIN_ID } from '@/services/confidential/relayerConstants'
 import useChainId from '@/hooks/useChainId'
 import ConfidentialUserDecryptPanel from './ConfidentialUserDecryptPanel'
 
-export type ConfidentialSafeBalancePanelContext = 'assets' | 'send'
-
-type Props = {
-  context?: ConfidentialSafeBalancePanelContext
-}
-
 /** Safe cUSDC balance ciphertext + step 4 decrypt only when `ACL.isAllowed` is true (Zama order). */
-const ConfidentialSafeBalancePanel = ({ context = 'assets' }: Props): ReactElement | null => {
+const ConfidentialSafeBalancePanel = (): ReactElement | null => {
   const { setTxFlow } = useContext(TxModalContext)
   const chainId = Number(useChainId())
   const { handle, loading, error, confToken, refetch, canFetch, supported } = useConfidentialBalanceHandle('usdc')
@@ -38,8 +32,6 @@ const ConfidentialSafeBalancePanel = ({ context = 'assets' }: Props): ReactEleme
   if (!supported) {
     return null
   }
-
-  const isSend = context === 'send'
 
   const onRefresh = () => {
     void refetch()

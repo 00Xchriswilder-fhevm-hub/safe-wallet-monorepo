@@ -30,7 +30,7 @@ const ConfidentialBalancesSection = (): ReactElement => {
           decrypt this Safe&apos;s confidential {TOKEN_LABELS.usdc.symbol} balance.
         </Alert>
       ) : (
-        <ConfidentialSafeBalancePanel context="assets" />
+        <ConfidentialSafeBalancePanel />
       )}
     </Paper>
   )
