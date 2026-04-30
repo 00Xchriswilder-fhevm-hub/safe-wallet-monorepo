@@ -55,10 +55,10 @@ const ConfidentialUserDecryptPanel = ({
   const balanceDecryptLocked = isBalance && (balanceAclLoading || !canDecryptBalance)
 
   return (
-    <Stack spacing={1} sx={{ py: 1 }}>
+    <Stack spacing={1} sx={{ py: 1, alignItems: 'flex-start', maxWidth: '100%' }}>
       <Typography variant="subtitle2">{isBalance ? 'Decrypt balance' : 'Verify amount'}</Typography>
       {isBalance && balanceDecryptLocked && (
-        <Alert severity="warning">
+        <Alert severity="warning" sx={{ alignSelf: 'stretch', width: '100%' }}>
           {balanceAclLoading
             ? 'Checking permissions…'
             : 'You cannot decrypt until all required cosigners have signed the Safe proposal and it has executed on-chain. After that, refresh and try again.'}
@@ -89,18 +89,17 @@ const ConfidentialUserDecryptPanel = ({
         {isDecrypting ? 'Sign in wallet…' : isBalance ? 'Decrypt balance' : 'Decrypt with wallet'}
       </Button>
       {error && (
-        <Alert severity="error" onClose={() => clearError()}>
+        <Alert severity="error" sx={{ alignSelf: 'stretch', width: '100%' }} onClose={() => clearError()}>
           {error}
         </Alert>
       )}
       {formattedDecrypt != null && (
         <>
           <Typography variant="body2">
-            <strong>{isBalance ? 'Decrypted balance' : 'Decrypted amount'}:</strong> {formattedDecrypt} {symbol} (raw:{' '}
-            {decrypted?.toString()})
+            <strong>{isBalance ? 'Decrypted balance' : 'Decrypted amount'}:</strong> {formattedDecrypt} {symbol}
           </Typography>
           {statedAmount?.trim() && statedMatches !== null && (
-            <Alert severity={statedMatches ? 'success' : 'warning'}>
+            <Alert severity={statedMatches ? 'success' : 'warning'} sx={{ alignSelf: 'stretch', width: '100%' }}>
               {statedMatches
                 ? 'Decrypted value matches the stated amount.'
                 : 'Decrypted value does not match the stated amount — confirm with the proposer before signing.'}

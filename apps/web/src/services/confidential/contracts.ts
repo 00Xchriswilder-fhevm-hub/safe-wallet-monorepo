@@ -42,9 +42,22 @@ const MAINNET_CONTRACTS = {
 
 export type ConfidentialTokenKey = 'usdc' | 'usdt'
 
-export const TOKEN_LABELS: Record<ConfidentialTokenKey, { symbol: string; decimals: number }> = {
-  usdc: { symbol: 'cUSDC', decimals: 6 },
-  usdt: { symbol: 'cUSDT', decimals: 6 },
+export const TOKEN_LABELS: Record<
+  ConfidentialTokenKey,
+  { symbol: string; decimals: number; underlyingSymbol: string; underlyingLogoUri: string }
+> = {
+  usdc: {
+    symbol: 'cUSDC',
+    decimals: 6,
+    underlyingSymbol: 'USDC',
+    underlyingLogoUri: 'https://assets.coingecko.com/coins/images/6319/small/USD_Coin_icon.png',
+  },
+  usdt: {
+    symbol: 'cUSDT',
+    decimals: 6,
+    underlyingSymbol: 'USDT',
+    underlyingLogoUri: 'https://assets.coingecko.com/coins/images/325/small/Tether.png',
+  },
 }
 
 export function getConfidentialTokenAddress(chainId: number, key: ConfidentialTokenKey): `0x${string}` | null {

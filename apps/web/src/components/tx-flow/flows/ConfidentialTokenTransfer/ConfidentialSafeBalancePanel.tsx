@@ -39,7 +39,7 @@ const ConfidentialSafeBalancePanel = (): ReactElement | null => {
   }
 
   return (
-    <Stack spacing={1} sx={{ py: 0.5 }}>
+    <Stack spacing={1} sx={{ py: 0.5, alignItems: 'flex-start', maxWidth: '100%' }}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
         <Typography variant="subtitle2">Multisig cUSDC balance (ciphertext)</Typography>
         <Tooltip title="Refresh balance handle and ACL status">
