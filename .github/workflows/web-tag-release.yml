@@ -25,6 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.version.outputs.version }}
+      version_number: ${{ steps.version.outputs.version_number }}
       changelog: ${{ steps.extract_changelog.outputs.changelog }}
 
     steps:
@@ -33,6 +34,18 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
+          token: ${{ secrets.RELEASE_BOT_TOKEN }}
+
+      - name: Import GPG key
+        uses: crazy-max/ghaction-import-gpg@v7
+        with:
+          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.GPG_PASSPHRASE }}
+          git_user_signingkey: true
+          git_tag_gpgsign: true
+          git_config_global: true
+          git_committer_name: 'github-actions[bot]'
+          git_committer_email: 'github-actions[bot]@users.noreply.github.com'
 
       - name: Verify PR commits are in main
         if: github.event.pull_request.merged != true
@@ -50,12 +63,12 @@ jobs:
         id: version
         run: |
           NEW_VERSION=$(node -p 'require("./apps/web/package.json").version')
-          echo "version=v$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "version=web-v$NEW_VERSION" >> $GITHUB_OUTPUT
           echo "version_number=$NEW_VERSION" >> $GITHUB_OUTPUT
 
       - name: Create a git tag
         if: steps.version.outputs.version
-        run: git tag ${{ steps.version.outputs.version }} && git push --tags
+        run: git tag -s ${{ steps.version.outputs.version }} -m "${{ steps.version.outputs.version }}" && git push --tags
 
       - name: Trigger Docker Hub release
         if: steps.version.outputs.version
@@ -100,7 +113,7 @@ jobs:
 
       - name: Create GitHub release (draft)
         if: needs.tag.outputs.version
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         id: create_release
         with:
           draft: true
@@ -111,7 +124,7 @@ jobs:
             ${{ needs.tag.outputs.changelog }}
 
             [🔗 IPFS release](
-            https://github.com/5afe/safe-wallet-ipfs/releases/tag/${{ needs.tag.outputs.version }})
+            https://github.com/5afe/safe-wallet-ipfs/releases/tag/v${{ needs.tag.outputs.version_number }})
         env:
           GITHUB_TOKEN: ${{ github.token }}
 

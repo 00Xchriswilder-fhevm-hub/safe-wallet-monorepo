@@ -9,7 +9,7 @@ import { showNotification } from '@/store/notificationsSlice'
 import { OnboardingTooltip } from '@/components/common/OnboardingTooltip'
 import { Chip } from '@/components/common/Chip'
 import { useDarkMode } from '@/hooks/useDarkMode'
-import OnlyOwner from '@/components/common/OnlyOwner'
+import OnlyOwnerOrProposer from '@/components/common/OnlyOwnerOrProposer'
 import { trackEvent } from '@/services/analytics'
 import { TX_LIST_EVENTS } from '@/services/analytics/events/txList'
 
@@ -53,12 +53,9 @@ const CsvTxExportButton = ({ hasActiveFilter }: CsvTxExportProps): ReactElement 
   useEffect(() => {
     if (exportJobId && !exportTimeout.current) {
       // Set a timeout to stop polling after 15 minutes
-      const timeout = setTimeout(
-        () => {
-          setExportJobId(null)
-        },
-        15 * 60 * 1000,
-      )
+      const timeout = setTimeout(() => {
+        setExportJobId(null)
+      }, 15 * 60 * 1000)
       exportTimeout.current = timeout
     }
     if (!exportJobId && exportTimeout.current) {
@@ -142,7 +139,7 @@ const CsvTxExportButton = ({ hasActiveFilter }: CsvTxExportProps): ReactElement 
         }
       >
         <div>
-          <OnlyOwner placement="top">
+          <OnlyOwnerOrProposer placement="top">
             {(isOk) => (
               <Button
                 variant="outlined"
@@ -160,7 +157,7 @@ const CsvTxExportButton = ({ hasActiveFilter }: CsvTxExportProps): ReactElement 
                 {exportJobId ? 'Exporting' : 'Export'}
               </Button>
             )}
-          </OnlyOwner>
+          </OnlyOwnerOrProposer>
         </div>
       </OnboardingTooltip>
 

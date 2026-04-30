@@ -10,7 +10,7 @@ import useAddressBook from '@/hooks/useAddressBook'
 import EntryDialog from '@/components/address-book/EntryDialog'
 import ContextMenu from '@/components/common/ContextMenu'
 import { TokenTransferFlow } from '@/components/tx-flow/flows'
-import { ZERO_ADDRESS } from '@safe-global/protocol-kit/dist/src/utils/constants'
+import { ZERO_ADDRESS } from '@safe-global/utils/utils/constants'
 import { isERC20Transfer, isNativeTokenTransfer, isOutgoingTransfer } from '@/utils/transaction-guards'
 import { trackEvent, TX_LIST_EVENTS } from '@/services/analytics'
 import { safeFormatUnits } from '@safe-global/utils/utils/formatters'
@@ -68,8 +68,8 @@ const TransferActions = ({
   const amount = isNativeTokenTransfer(txInfo.transferInfo)
     ? safeFormatUnits(txInfo.transferInfo.value ?? '0', ETHER)
     : isERC20Transfer(txInfo.transferInfo)
-      ? safeFormatUnits(txInfo.transferInfo.value, txInfo.transferInfo.decimals)
-      : undefined
+    ? safeFormatUnits(txInfo.transferInfo.value, txInfo.transferInfo.decimals)
+    : undefined
 
   const isOutgoingTx = isOutgoingTransfer(txInfo)
   const canSendAgain =
