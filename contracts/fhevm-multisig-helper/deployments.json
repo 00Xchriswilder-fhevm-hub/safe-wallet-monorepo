@@ -1,0 +1,15 @@
+{
+  "$schema": "Recorded deployments used by apps/web (NEXT_PUBLIC_*_FHEVM_MULTISIG_HELPER). Update after redeploy.",
+  "FHEVMMultiSigHelper": {
+    "sepolia": {
+      "chainId": 11155111,
+      "address": "0xc51693587A5ec99FF131Ccd8aa6Fb424B17f5F61",
+      "explorer": "https://sepolia.etherscan.io/address/0xc51693587A5ec99FF131Ccd8aa6Fb424B17f5F61"
+    },
+    "mainnet": {
+      "chainId": 1,
+      "address": "0xd430F46fE522a32b12ce92C719437fFce35e127",
+      "explorer": "https://etherscan.io/address/0xd430F46fE522a32b12ce92C719437fFce35e127"
+    }
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "name": "@safe-global/fhevm-multisig-helper-contracts",
+  "version": "1.0.0",
+  "private": true,
+  "description": "FHEVMMultiSigHelper — ACL preflight for Safe confidential (ERC-7984) transfers",
+  "scripts": {
+    "compile": "hardhat compile",
+    "deploy:sepolia": "hardhat run scripts/deploy-helper.ts --network sepolia",
+    "deploy:mainnet": "hardhat run scripts/deploy-helper.ts --network mainnet",
+    "clean": "hardhat clean"
+  },
+  "devDependencies": {
+    "@fhevm/hardhat-plugin": "0.4.2",
+    "@nomicfoundation/hardhat-ethers": "^3.1.3",
+    "@typechain/ethers-v6": "^0.5.1",
+    "@typechain/hardhat": "^9.1.0",
+    "dotenv": "^16.4.5",
+    "ethers": "^6.16.0",
+    "hardhat": "^2.26.0",
+    "ts-node": "^10.9.2",
+    "typechain": "^8.3.2",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "@fhevm/solidity": "0.11.1"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
