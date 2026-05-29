@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Alert, Button, Stack, Typography } from '@mui/material'
+import { Alert, Box, Button, Stack, Typography } from '@mui/material'
 import { formatUnits, parseUnits } from 'viem'
 import { useConfidentialUserDecrypt } from '@/hooks/useConfidentialUserDecrypt'
 import { TOKEN_LABELS } from '@/services/confidential/contracts'
@@ -19,6 +19,11 @@ type Props = {
   balanceAclAllowsDecrypt?: boolean
   /** While checking `isAllowed` on-chain. */
   balanceAclLoading?: boolean
+  /**
+   * When `true` with `variant="balance"`: toolbar style — only the decrypt button sits in the parent flex row;
+   * alerts / decrypted output use full width on the following line(s). Parent should be `display: flex; flexWrap: wrap`.
+   */
+  inline?: boolean
 }
 
 /** Relayer user-decrypt: EIP-712 from relayer → wallet signs → cleartext returned. */
@@ -30,6 +35,7 @@ const ConfidentialUserDecryptPanel = ({
   variant = 'transfer',
   balanceAclAllowsDecrypt,
   balanceAclLoading = false,
+  inline = false,
 }: Props) => {
   const { decrypt, isDecrypting, error, clearError, isReady } = useConfidentialUserDecrypt()
   const [decrypted, setDecrypted] = useState<bigint | null>(null)
@@ -54,16 +60,50 @@ const ConfidentialUserDecryptPanel = ({
   const canDecryptBalance = !isBalance || balanceAclAllowsDecrypt === true
   const balanceDecryptLocked = isBalance && (balanceAclLoading || !canDecryptBalance)
 
+  const decryptButton = (
+    <Button
+      variant="outlined"
+      size="small"
+      disabled={!isReady || isDecrypting || !handle || balanceDecryptLocked}
+      title={isBalance ? 'Decrypt balance' : 'Verify amount'}
+      sx={inline && isBalance ? { flexShrink: 0 } : undefined}
+      onClick={async () => {
+        clearError()
+        setDecrypted(null)
+        const v = await decrypt(handle, contractAddress)
+        if (v != null) setDecrypted(v)
+      }}
+    >
+      {isDecrypting ? 'Sign in wallet…' : isBalance ? 'Decrypt balance' : 'Decrypt with wallet'}
+    </Button>
+  )
+
+  const fullWidthRowSx =
+    inline && isBalance ? { flexBasis: '100%', width: '100%', minWidth: '100%' as const } : undefined
+
+  if (inline && isBalance) {
+    return (
+      <Box sx={{ display: 'contents' }}>
+        {decryptButton}
+        {error && (
+          <Alert severity="error" sx={fullWidthRowSx} onClose={() => clearError()}>
+            {error}
+          </Alert>
+        )}
+        {formattedDecrypt != null && (
+          <>
+            <Typography variant="body2" sx={fullWidthRowSx}>
+              <strong>Decrypted balance:</strong> {formattedDecrypt} {symbol}
+            </Typography>
+          </>
+        )}
+      </Box>
+    )
+  }
+
   return (
     <Stack spacing={1} sx={{ py: 1, alignItems: 'flex-start', maxWidth: '100%' }}>
       <Typography variant="subtitle2">{isBalance ? 'Decrypt balance' : 'Verify amount'}</Typography>
-      {isBalance && balanceDecryptLocked && (
-        <Alert severity="warning" sx={{ alignSelf: 'stretch', width: '100%' }}>
-          {balanceAclLoading
-            ? 'Checking permissions…'
-            : 'You cannot decrypt until all required cosigners have signed the Safe proposal and it has executed on-chain. After that, refresh and try again.'}
-        </Alert>
-      )}
       {!isBalance && (
         <Typography variant="body2" color="text.secondary">
           The relayer returns EIP-712 data; your wallet signs it; the relayer returns the cleartext amount. Compare with
@@ -75,19 +115,7 @@ const ConfidentialUserDecryptPanel = ({
           <strong>Stated amount:</strong> {statedAmount.trim()} {symbol}
         </Typography>
       ) : null}
-      <Button
-        variant="outlined"
-        size="small"
-        disabled={!isReady || isDecrypting || !handle || balanceDecryptLocked}
-        onClick={async () => {
-          clearError()
-          setDecrypted(null)
-          const v = await decrypt(handle, contractAddress)
-          if (v != null) setDecrypted(v)
-        }}
-      >
-        {isDecrypting ? 'Sign in wallet…' : isBalance ? 'Decrypt balance' : 'Decrypt with wallet'}
-      </Button>
+      {decryptButton}
       {error && (
         <Alert severity="error" sx={{ alignSelf: 'stretch', width: '100%' }} onClose={() => clearError()}>
           {error}

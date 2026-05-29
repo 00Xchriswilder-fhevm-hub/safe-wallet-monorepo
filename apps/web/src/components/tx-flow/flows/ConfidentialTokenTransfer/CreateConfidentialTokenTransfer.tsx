@@ -1,8 +1,21 @@
 import { type ReactElement, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import CheckIcon from '@mui/icons-material/Check'
 import { BrowserProvider, type Eip1193Provider, type Signer } from 'ethers'
-import { Alert, Box, Button, Link, Stack, TextField, Typography } from '@mui/material'
+import {
+  Alert,
+  Box,
+  Button,
+  FormControl,
+  InputLabel,
+  Link,
+  MenuItem,
+  Select,
+  Stack,
+  TextField,
+  Typography,
+} from '@mui/material'
 import { isAddress } from 'viem'
+import TokenIcon from '@/components/common/TokenIcon'
 import TxCard from '@/components/tx-flow/common/TxCard'
 import { TxFlowContext, type TxFlowContextType } from '@/components/tx-flow/TxFlowProvider'
 import useChainId from '@/hooks/useChainId'
@@ -13,12 +26,12 @@ import {
   getAclProxyForChainId,
   getConfidentialTokenAddress,
   getFhevmMultisigHelperForChainId,
+  listConfiguredConfidentialTokenKeys,
   TOKEN_LABELS,
   type ConfidentialTokenKey,
 } from '@/services/confidential/contracts'
 import { sendAclAllowTx, sendAllowForSafeMultiSigTx } from '@/services/confidential/preflight'
 import { MAINNET_CHAIN_ID, SEPOLIA_CHAIN_ID } from '@/services/confidential/relayerConstants'
-import ConfidentialSafeBalancePanel from './ConfidentialSafeBalancePanel'
 import type { ConfidentialTokenTransferParams } from './types'
 
 const defaultParams: ConfidentialTokenTransferParams = {
@@ -49,8 +62,27 @@ const CreateConfidentialTokenTransfer = (): ReactElement => {
 
   const [recipient, setRecipient] = useState(data?.recipient ?? defaultParams.recipient)
   const [amount, setAmount] = useState(data?.amount ?? defaultParams.amount)
-  /** Confidential send UI is cUSDC-only. */
-  const tokenKey: ConfidentialTokenKey = 'usdc'
+  const configuredKeys = useMemo(() => listConfiguredConfidentialTokenKeys(chainId), [chainId])
+  const [tokenKey, setTokenKey] = useState<ConfidentialTokenKey>(data?.tokenKey ?? defaultParams.tokenKey)
+
+  useEffect(() => {
+    if (configuredKeys.length === 0) return
+    if (!configuredKeys.includes(tokenKey)) {
+      setTokenKey(configuredKeys[0])
+      setEncrypted(undefined)
+      setHelperTxHash(undefined)
+      setAclTxHash(undefined)
+    }
+  }, [chainId, configuredKeys, tokenKey])
+
+  const selectTokenKey = useCallback((next: ConfidentialTokenKey) => {
+    setTokenKey(next)
+    setEncrypted(undefined)
+    setHelperTxHash(undefined)
+    setAclTxHash(undefined)
+    setFormError(null)
+  }, [])
+
   const [encrypted, setEncrypted] = useState(data?.encrypted)
   const [helperTxHash, setHelperTxHash] = useState(data?.helperTxHash)
   const [aclTxHash, setAclTxHash] = useState(data?.aclTxHash)
@@ -66,6 +98,7 @@ const CreateConfidentialTokenTransfer = (): ReactElement => {
   const isConfidentialChain = chainId === SEPOLIA_CHAIN_ID || chainId === MAINNET_CHAIN_ID
   const canUse =
     isConfidentialChain &&
+    configuredKeys.length > 0 &&
     helper &&
     confToken &&
     confToken !== '0x0000000000000000000000000000000000000000' &&
@@ -103,7 +136,7 @@ const CreateConfidentialTokenTransfer = (): ReactElement => {
           contractAddress: helper,
           userAddress: wallet.address,
           amount: amount.trim(),
-          decimals: TOKEN_LABELS.usdc.decimals,
+          decimals: TOKEN_LABELS[tokenKey].decimals,
         },
         chainId,
       )
@@ -118,7 +151,7 @@ const CreateConfidentialTokenTransfer = (): ReactElement => {
     } finally {
       setEncrypting(false)
     }
-  }, [amount, chainId, helper, wallet?.address])
+  }, [amount, chainId, helper, tokenKey, wallet?.address])
 
   const onHelper = useCallback(async () => {
     setFormError(null)
@@ -188,13 +221,11 @@ const CreateConfidentialTokenTransfer = (): ReactElement => {
   return (
     <TxCard>
       <Stack spacing={2}>
-        <ConfidentialSafeBalancePanel />
-
         <Typography variant="body2" color="text.secondary">
           <Link href="https://portfolio.zama.org/shield" target="_blank" rel="noopener noreferrer" underline="hover">
-            Shield your USDC on Zama Portfolio
+            Shield assets on Zama Portfolio
           </Link>{' '}
-          to move USDC into confidential form (cUSDC) to FUND the safe multisig.
+          to move underlying tokens into confidential form to fund the Safe multisig.
         </Typography>
 
         <Typography variant="body2" color="text.secondary">
@@ -213,13 +244,13 @@ const CreateConfidentialTokenTransfer = (): ReactElement => {
               </>
             ) : chainId === SEPOLIA_CHAIN_ID ? (
               <>
-                cUSDC addresses could not be loaded. Add <code>NEXT_PUBLIC_SEPOLIA_CONF_USDC_ADDRESS</code> to{' '}
-                <code>.env</code> and restart the dev server so Next.js inlines <code>NEXT_PUBLIC_*</code> vars.
+                No confidential token addresses could be loaded for Sepolia. Add <code>NEXT_PUBLIC_SEPOLIA_CONF_*</code>{' '}
+                variables (see <code>.env</code> / official Sepolia registry) and restart the dev server.
               </>
             ) : (
               <>
-                cUSDC addresses could not be loaded. Add <code>NEXT_PUBLIC_MAINNET_CONF_USDC_ADDRESS</code> to{' '}
-                <code>.env</code> and restart the dev server so Next.js inlines <code>NEXT_PUBLIC_*</code> vars.
+                No confidential token addresses could be loaded for mainnet. Add <code>NEXT_PUBLIC_MAINNET_CONF_*</code>{' '}
+                variables (see <code>.env.example</code>) and restart the dev server.
               </>
             )}
           </Alert>
@@ -231,13 +262,50 @@ const CreateConfidentialTokenTransfer = (): ReactElement => {
           </Alert>
         )}
 
-        <TextField
-          label="Confidential token"
-          fullWidth
-          value={TOKEN_LABELS.usdc.symbol}
-          inputProps={{ readOnly: true }}
-          helperText="Confidential send uses cUSDC only."
-        />
+        {configuredKeys.length === 0 ? (
+          <Alert severity="warning">
+            No confidential token contracts are configured for this network. Check <code>NEXT_PUBLIC_*_CONF_*</code>{' '}
+            addresses in <code>.env</code>.
+          </Alert>
+        ) : (
+          <FormControl fullWidth>
+            <InputLabel id="confidential-token-select-label">Confidential token</InputLabel>
+            <Select
+              labelId="confidential-token-select-label"
+              label="Confidential token"
+              value={configuredKeys.includes(tokenKey) ? tokenKey : configuredKeys[0]}
+              onChange={(e) => selectTokenKey(e.target.value as ConfidentialTokenKey)}
+              renderValue={(v) => {
+                const m = TOKEN_LABELS[v]
+                return (
+                  <Stack direction="row" alignItems="center" gap={1}>
+                    <TokenIcon logoUri={m.underlyingLogoUri} tokenSymbol={m.underlyingSymbol} size={24} />
+                    <Typography component="span" variant="body2">
+                      {m.symbol}
+                    </Typography>
+                  </Stack>
+                )
+              }}
+            >
+              {configuredKeys.map((k) => {
+                const m = TOKEN_LABELS[k]
+                return (
+                  <MenuItem key={k} value={k}>
+                    <Stack direction="row" alignItems="center" gap={1}>
+                      <TokenIcon logoUri={m.underlyingLogoUri} tokenSymbol={m.underlyingSymbol} size={24} />
+                      <Typography variant="body2">
+                        {m.symbol}{' '}
+                        <Typography component="span" color="text.secondary" variant="caption">
+                          ({m.underlyingSymbol})
+                        </Typography>
+                      </Typography>
+                    </Stack>
+                  </MenuItem>
+                )
+              })}
+            </Select>
+          </FormControl>
+        )}
 
         <TextField
           label="Recipient address"
@@ -253,7 +321,7 @@ const CreateConfidentialTokenTransfer = (): ReactElement => {
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
           placeholder="0.0"
-          helperText={`Decimals: ${TOKEN_LABELS.usdc.decimals}`}
+          helperText={`Decimals: ${TOKEN_LABELS[tokenKey].decimals}`}
         />
 
         <Box>

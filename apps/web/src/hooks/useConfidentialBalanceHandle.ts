@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { BrowserProvider, Contract, type Eip1193Provider } from 'ethers'
+import { BrowserProvider, Contract, JsonRpcProvider, type Eip1193Provider } from 'ethers'
 import useChainId from '@/hooks/useChainId'
 import useSafeInfo from '@/hooks/useSafeInfo'
 import useWallet from '@/hooks/wallets/useWallet'
@@ -8,7 +8,11 @@ import {
   getConfidentialTokenAddress,
   type ConfidentialTokenKey,
 } from '@/services/confidential/contracts'
-import { MAINNET_CHAIN_ID, SEPOLIA_CHAIN_ID } from '@/services/confidential/relayerConstants'
+import {
+  getConfidentialBalanceReadRpcUrl,
+  MAINNET_CHAIN_ID,
+  SEPOLIA_CHAIN_ID,
+} from '@/services/confidential/relayerConstants'
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const
 
@@ -23,8 +27,37 @@ function normalizeHandle(value: unknown): string {
   return ''
 }
 
+async function readBalanceHandle(
+  confToken: `0x${string}`,
+  safeAddress: `0x${string}`,
+  walletProvider: Eip1193Provider,
+  chainId: number,
+): Promise<string> {
+  const run = (provider: BrowserProvider | JsonRpcProvider) => {
+    const contract = new Contract(confToken, CONF_TOKEN_ABI, provider)
+    return contract.confidentialBalanceOf(safeAddress)
+  }
+
+  try {
+    const browserProvider = new BrowserProvider(walletProvider)
+    const raw = await run(browserProvider)
+    const h = normalizeHandle(raw)
+    return h && h.length > 0 ? h : ZERO_B32
+  } catch {
+    const rpcUrl = getConfidentialBalanceReadRpcUrl(chainId)
+    if (!rpcUrl) {
+      throw new Error('No read RPC fallback for this chain')
+    }
+    const jsonProvider = new JsonRpcProvider(rpcUrl, chainId)
+    const raw = await run(jsonProvider)
+    const h = normalizeHandle(raw)
+    return h && h.length > 0 ? h : ZERO_B32
+  }
+}
+
 /**
- * Reads `confidentialBalanceOf(safe)` (encrypted handle) from the confidential token contract via the connected wallet RPC.
+ * Reads `confidentialBalanceOf(safe)` (encrypted handle). Tries the wallet RPC first, then a public read RPC if the
+ * wallet returns empty / undecodable data (common on mainnet with some injected providers).
  */
 export function useConfidentialBalanceHandle(tokenKey: ConfidentialTokenKey = 'usdc') {
   const chainIdStr = useChainId()
@@ -49,18 +82,23 @@ export function useConfidentialBalanceHandle(tokenKey: ConfidentialTokenKey = 'u
     setLoading(true)
     setError(null)
     try {
-      const provider = new BrowserProvider(wallet.provider as Eip1193Provider)
-      const contract = new Contract(confToken, CONF_TOKEN_ABI, provider)
-      const raw = await contract.confidentialBalanceOf(safeAddress)
-      const h = normalizeHandle(raw)
-      setHandle(h || null)
+      const h = await readBalanceHandle(
+        confToken as `0x${string}`,
+        safeAddress as `0x${string}`,
+        wallet.provider as Eip1193Provider,
+        chainId,
+      )
+      setHandle(h)
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not read confidential balance')
       setHandle(null)
+      const technical = e instanceof Error ? e.message : String(e)
+      setError(
+        `Could not read confidential balance for ${confToken}. Wallet RPC and public fallback both failed. Set NEXT_PUBLIC_MAINNET_PUBLIC_RPC_URL / NEXT_PUBLIC_SEPOLIA_PUBLIC_RPC_URL if needed. (${technical})`,
+      )
     } finally {
       setLoading(false)
     }
-  }, [canFetch, confToken, safeAddress, wallet?.provider])
+  }, [canFetch, chainId, confToken, safeAddress, wallet?.provider])
 
   useEffect(() => {
     void refetch()

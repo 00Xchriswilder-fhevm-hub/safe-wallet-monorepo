@@ -3,6 +3,7 @@ import ReviewBalanceAclTx from './ReviewBalanceAclTx'
 import AssetsIcon from '@/public/images/sidebar/assets.svg'
 import { useMemo } from 'react'
 import { TxFlowType } from '@/services/analytics'
+import type { ConfidentialTokenKey } from '@/services/confidential/contracts'
 import { TxFlow } from '../../TxFlow'
 import { TxFlowStep } from '../../TxFlowStep'
 import type { BalanceAclParams } from './types'
@@ -11,9 +12,11 @@ export type { BalanceAclParams } from './types'
 
 type Props = {
   txNonce?: number
+  /** Which confidential wrapper’s balance handle to use (must match the row that opened this flow). */
+  tokenKey?: ConfidentialTokenKey
 }
 
-const BalanceAclProposalFlow = ({ txNonce }: Props) => {
+const BalanceAclProposalFlow = ({ txNonce, tokenKey = 'usdc' }: Props) => {
   const initialData = useMemo<BalanceAclParams>(() => ({}), [])
 
   return (
@@ -26,7 +29,7 @@ const BalanceAclProposalFlow = ({ txNonce }: Props) => {
       ReviewTransactionComponent={ReviewBalanceAclTx}
     >
       <TxFlowStep title="Propose ACL for balance">
-        <CreateBalanceAclProposal />
+        <CreateBalanceAclProposal tokenKey={tokenKey} />
       </TxFlowStep>
     </TxFlow>
   )

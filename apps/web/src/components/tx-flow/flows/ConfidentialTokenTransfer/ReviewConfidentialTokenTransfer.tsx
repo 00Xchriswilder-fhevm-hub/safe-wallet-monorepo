@@ -6,7 +6,6 @@ import { SafeTxContext } from '@/components/tx-flow/SafeTxProvider'
 import { createTx } from '@/services/tx/tx-sender'
 import { encodeConfidentialTransferMultisigCalldata } from '@/services/confidential/encode'
 import { getConfidentialTokenAddress } from '@/services/confidential/contracts'
-import { MAINNET_CHAIN_ID, SEPOLIA_CHAIN_ID } from '@/services/confidential/relayerConstants'
 import useChainId from '@/hooks/useChainId'
 import type { ConfidentialTokenTransferParams } from './types'
 import ConfidentialUserDecryptPanel from './ConfidentialUserDecryptPanel'
@@ -53,13 +52,11 @@ const ReviewConfidentialTokenTransfer = ({
     }
 
     if (!isAddress(confToken) || confToken === '0x0000000000000000000000000000000000000000') {
-      const hint =
-        chainId === MAINNET_CHAIN_ID
-          ? 'Set NEXT_PUBLIC_MAINNET_CONF_USDC_ADDRESS / CONF_USDT in .env'
-          : chainId === SEPOLIA_CHAIN_ID
-            ? 'Set NEXT_PUBLIC_SEPOLIA_CONF_USDC_ADDRESS / CONF_USDT in .env'
-            : 'Set NEXT_PUBLIC_SEPOLIA_* or NEXT_PUBLIC_MAINNET_* confidential token addresses in .env'
-      setSafeTxError(new Error(`Confidential token address is not configured. ${hint}`))
+      setSafeTxError(
+        new Error(
+          'Confidential token address is not configured. Set the matching NEXT_PUBLIC_*_CONF_* env var(s) for this network and restart the build.',
+        ),
+      )
       return
     }
 

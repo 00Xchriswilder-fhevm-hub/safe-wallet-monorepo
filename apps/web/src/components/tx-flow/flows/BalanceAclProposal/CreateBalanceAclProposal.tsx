@@ -4,15 +4,20 @@ import { TxFlowContext, type TxFlowContextType } from '@/components/tx-flow/TxFl
 import useChainId from '@/hooks/useChainId'
 import { useConfidentialBalanceHandle, isZeroBytes32Handle } from '@/hooks/useConfidentialBalanceHandle'
 import useSafeInfo from '@/hooks/useSafeInfo'
-import { getAclProxyForChainId, TOKEN_LABELS } from '@/services/confidential/contracts'
+import { getAclProxyForChainId, TOKEN_LABELS, type ConfidentialTokenKey } from '@/services/confidential/contracts'
 import { MAINNET_CHAIN_ID, SEPOLIA_CHAIN_ID } from '@/services/confidential/relayerConstants'
 import type { BalanceAclParams } from './types'
 
-const CreateBalanceAclProposal = (): ReactElement => {
+type CreateProps = {
+  tokenKey?: ConfidentialTokenKey
+}
+
+const CreateBalanceAclProposal = ({ tokenKey = 'usdc' }: CreateProps): ReactElement => {
   const { onNext } = useContext(TxFlowContext) as TxFlowContextType<BalanceAclParams>
   const chainId = Number(useChainId())
   const { safe, safeLoaded } = useSafeInfo()
-  const { handle, loading, error, refetch, canFetch, supported } = useConfidentialBalanceHandle('usdc')
+  const labels = TOKEN_LABELS[tokenKey]
+  const { handle, loading, error, refetch, canFetch, supported } = useConfidentialBalanceHandle(tokenKey)
   const aclProxy = getAclProxyForChainId(chainId)
 
   const ownerCount = safe.owners?.length ?? 0
@@ -38,9 +43,7 @@ const CreateBalanceAclProposal = (): ReactElement => {
       {hint && <Alert severity="warning">{hint}</Alert>}
 
       {!canFetch && (
-        <Alert severity="info">
-          Connect a wallet on this network to load the balance handle for {TOKEN_LABELS.usdc.symbol}.
-        </Alert>
+        <Alert severity="info">Connect a wallet on this network to load the balance handle for {labels.symbol}.</Alert>
       )}
 
       {loading && (
