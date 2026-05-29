@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react'
 import { Alert, Box, Button, Stack, Typography } from '@mui/material'
-import { formatUnits, parseUnits } from 'viem'
+import { parseUnits } from 'viem'
 import { useConfidentialUserDecrypt } from '@/hooks/useConfidentialUserDecrypt'
-import { TOKEN_LABELS } from '@/services/confidential/contracts'
+import { CONFIDENTIAL_DECIMALS, TOKEN_LABELS } from '@/services/confidential/contracts'
+import { formatConfidentialAmount } from '@/services/confidential/formatConfidentialAmount'
 import type { ConfidentialTokenKey } from '@/services/confidential/contracts'
 
 type Props = {
@@ -39,22 +40,22 @@ const ConfidentialUserDecryptPanel = ({
 }: Props) => {
   const { decrypt, isDecrypting, error, clearError, isReady } = useConfidentialUserDecrypt()
   const [decrypted, setDecrypted] = useState<bigint | null>(null)
-  const { decimals, symbol } = TOKEN_LABELS[tokenKey]
+  const { symbol } = TOKEN_LABELS[tokenKey]
 
   const formattedDecrypt = useMemo(() => {
     if (decrypted == null) return null
-    return formatUnits(decrypted, decimals)
-  }, [decrypted, decimals])
+    return formatConfidentialAmount(decrypted)
+  }, [decrypted])
 
   const statedMatches = useMemo(() => {
     if (!statedAmount?.trim() || decrypted == null) return null
     try {
-      const stated = parseUnits(statedAmount.trim(), decimals)
+      const stated = parseUnits(statedAmount.trim(), CONFIDENTIAL_DECIMALS)
       return stated === decrypted
     } catch {
       return false
     }
-  }, [statedAmount, decrypted, decimals])
+  }, [statedAmount, decrypted])
 
   const isBalance = variant === 'balance'
   const canDecryptBalance = !isBalance || balanceAclAllowsDecrypt === true

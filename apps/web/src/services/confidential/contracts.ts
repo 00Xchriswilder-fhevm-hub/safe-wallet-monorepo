@@ -75,54 +75,61 @@ export const CONFIDENTIAL_TOKEN_KEYS_MAINNET: ConfidentialTokenKey[] = [
 /** Sepolia: same asset set as mainnet (official mock wrappers on testnet). */
 export const CONFIDENTIAL_TOKEN_KEYS_SEPOLIA: ConfidentialTokenKey[] = CONFIDENTIAL_TOKEN_KEYS_MAINNET
 
+/**
+ * ERC-7984 confidential balances / relayer encrypt-decrypt use 6 decimals on the FHE side,
+ * even when the underlying ERC-20 uses 18 (Zama convention; see ERC7984-bounty `tokenDecimals.ts`).
+ */
+export const CONFIDENTIAL_DECIMALS = 6
+
 export const TOKEN_LABELS: Record<
   ConfidentialTokenKey,
   {
     symbol: string
-    decimals: number
+    /** Public ERC-20 decimals (underlying token). */
+    underlyingDecimals: number
     underlyingSymbol: string
     underlyingLogoUri?: string
   }
 > = {
   usdc: {
     symbol: 'cUSDC',
-    decimals: 6,
+    underlyingDecimals: 6,
     underlyingSymbol: 'USDC',
     underlyingLogoUri: 'https://assets.coingecko.com/coins/images/6319/small/USD_Coin_icon.png',
   },
   usdt: {
     symbol: 'cUSDT',
-    decimals: 6,
+    underlyingDecimals: 6,
     underlyingSymbol: 'USDT',
     underlyingLogoUri: 'https://assets.coingecko.com/coins/images/325/small/Tether.png',
   },
   zama: {
     symbol: 'cZAMA',
-    decimals: 18,
+    underlyingDecimals: 18,
     underlyingSymbol: 'ZAMA',
     underlyingLogoUri: 'https://coin-images.coingecko.com/coins/images/70921/small/zama.png',
   },
   weth: {
     symbol: 'cWETH',
-    decimals: 18,
+    underlyingDecimals: 18,
     underlyingSymbol: 'WETH',
     underlyingLogoUri: 'https://assets.coingecko.com/coins/images/2518/small/weth.png',
   },
   bron: {
     symbol: 'cBRON',
-    decimals: 18,
+    underlyingDecimals: 18,
     underlyingSymbol: 'BRON',
     underlyingLogoUri: '/images/common/token-placeholder.svg',
   },
   tgbp: {
     symbol: 'ctGBP',
-    decimals: 18,
+    underlyingDecimals: 18,
     underlyingSymbol: 'tGBP',
     underlyingLogoUri: 'https://coin-images.coingecko.com/coins/images/70647/small/tgbp-square.png',
   },
   xaut: {
     symbol: 'cXAUt',
-    decimals: 6,
+    underlyingDecimals: 6,
     underlyingSymbol: 'XAUt',
     underlyingLogoUri: 'https://coin-images.coingecko.com/coins/images/10481/small/logo.png',
   },

@@ -2,7 +2,7 @@ import { useCallback, useRef, useState } from 'react'
 import type { Eip1193Provider } from 'ethers'
 import useChainId from '@/hooks/useChainId'
 import useWallet from '@/hooks/wallets/useWallet'
-import { userDecryptHandleWithWallet } from '@/services/confidential/userDecryptFlow'
+import { toDecryptErrorMessage, userDecryptHandleWithWallet } from '@/services/confidential/userDecryptFlow'
 
 export function useConfidentialUserDecrypt() {
   const chainIdStr = useChainId()
@@ -22,21 +22,22 @@ export function useConfidentialUserDecrypt() {
         setError('Missing handle or contract.')
         return null
       }
-      if (activeHandle.current === handle) return null
+      if (activeHandle.current) return null
       activeHandle.current = handle
       setIsDecrypting(true)
       setError(null)
       try {
+        const walletChainIdHint = wallet.chainId ? Number(wallet.chainId) : undefined
         return await userDecryptHandleWithWallet({
           chainId,
           userAddress: wallet.address,
           handle,
           contractAddress,
           provider: wallet.provider as Eip1193Provider,
+          walletChainIdHint,
         })
       } catch (e) {
-        const msg = e instanceof Error ? e.message : 'Decrypt failed.'
-        setError(msg)
+        setError(toDecryptErrorMessage(e))
         return null
       } finally {
         setIsDecrypting(false)

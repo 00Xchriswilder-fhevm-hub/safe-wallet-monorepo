@@ -23,6 +23,7 @@ import useSafeInfo from '@/hooks/useSafeInfo'
 import useWallet from '@/hooks/wallets/useWallet'
 import { relayerEncryptAmountForChain } from '@/services/confidential/relayer'
 import {
+  CONFIDENTIAL_DECIMALS,
   getAclProxyForChainId,
   getConfidentialTokenAddress,
   getFhevmMultisigHelperForChainId,
@@ -136,7 +137,7 @@ const CreateConfidentialTokenTransfer = (): ReactElement => {
           contractAddress: helper,
           userAddress: wallet.address,
           amount: amount.trim(),
-          decimals: TOKEN_LABELS[tokenKey].decimals,
+          decimals: CONFIDENTIAL_DECIMALS,
         },
         chainId,
       )
@@ -321,7 +322,11 @@ const CreateConfidentialTokenTransfer = (): ReactElement => {
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
           placeholder="0.0"
-          helperText={`Decimals: ${TOKEN_LABELS[tokenKey].decimals}`}
+          helperText={
+            TOKEN_LABELS[tokenKey].underlyingDecimals === CONFIDENTIAL_DECIMALS
+              ? `Confidential amount uses ${CONFIDENTIAL_DECIMALS} decimals (ERC-7984).`
+              : `Confidential amount uses ${CONFIDENTIAL_DECIMALS} decimals (ERC-7984); underlying ${TOKEN_LABELS[tokenKey].underlyingSymbol} uses ${TOKEN_LABELS[tokenKey].underlyingDecimals} on-chain.`
+          }
         />
 
         <Box>
