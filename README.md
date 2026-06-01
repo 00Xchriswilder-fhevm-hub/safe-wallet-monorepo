@@ -1,3 +1,7 @@
+<img width="638" height="914" alt="image" src="https://github.com/user-attachments/assets/cb991dfb-272d-4095-9afa-8c31618c7545" />
+
+
+
 # <img src="https://github.com/user-attachments/assets/b8249113-d515-4c91-a12a-f134813614e8" height="60" valign="middle" alt="Safe{Wallet}" style="background: #fff; padding: 20px; margin: 0 -20px" />
 
 # Safe{Wallet} monorepo
